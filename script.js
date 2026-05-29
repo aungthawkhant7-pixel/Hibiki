@@ -1,5 +1,4 @@
 // Hibiki 響 — Music Player
-// Features: search, playlist saving, recently played, dark/light mode, mobile support
 
 const DEMO_TRACKS = [
   { id: 'dQw4w9WgXcQ', title: 'Never Gonna Give You Up', channel: 'Rick Astley', thumb: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg' },
@@ -15,17 +14,8 @@ const DEMO_TRACKS = [
   { id: 'YQHsXMglC9A', title: 'Hello', channel: 'Adele', thumb: 'https://i.ytimg.com/vi/YQHsXMglC9A/mqdefault.jpg' },
   { id: 'pRpeEdMmmQ0', title: 'Waka Waka', channel: 'Shakira', thumb: 'https://i.ytimg.com/vi/pRpeEdMmmQ0/mqdefault.jpg' },
   { id: '60ItHLz5WEA', title: 'Faded', channel: 'Alan Walker', thumb: 'https://i.ytimg.com/vi/60ItHLz5WEA/mqdefault.jpg' },
-  { id: '3AtDnEC4zak', title: 'We Dont Talk Anymore', channel: 'Charlie Puth', thumb: 'https://i.ytimg.com/vi/3AtDnEC4zak/mqdefault.jpg' },
-  { id: 'dQw4w9WgXcQ', title: 'Never Gonna Give You Up', channel: 'Rick Astley', thumb: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg' },
-  { id: 'JGwWNGJdvx8', title: 'Shape of You', channel: 'Ed Sheeran', thumb: 'https://i.ytimg.com/vi/JGwWNGJdvx8/mqdefault.jpg' },
-  { id: 'kTJczUoc26U', title: 'Starboy', channel: 'The Weeknd', thumb: 'https://i.ytimg.com/vi/kTJczUoc26U/mqdefault.jpg' },
-  { id: 'RgKAFK5djSk', title: 'See You Again', channel: 'Wiz Khalifa', thumb: 'https://i.ytimg.com/vi/RgKAFK5djSk/mqdefault.jpg' },
-  { id: 'OPf0YbXqDm0', title: 'Uptown Funk', channel: 'Mark Ronson', thumb: 'https://i.ytimg.com/vi/OPf0YbXqDm0/mqdefault.jpg' },
-  { id: 'hT_nvWreIhg', title: 'Counting Stars', channel: 'OneRepublic', thumb: 'https://i.ytimg.com/vi/hT_nvWreIhg/mqdefault.jpg' },
-  { id: '09R8_2nJtjg', title: 'Sugar', channel: 'Maroon 5', thumb: 'https://i.ytimg.com/vi/09R8_2nJtjg/mqdefault.jpg' },
-  { id: '60ItHLz5WEA', title: 'Faded', channel: 'Alan Walker', thumb: 'https://i.ytimg.com/vi/60ItHLz5WEA/mqdefault.jpg' }
+  { id: '3AtDnEC4zak', title: 'We Dont Talk Anymore', channel: 'Charlie Puth', thumb: 'https://i.ytimg.com/vi/3AtDnEC4zak/mqdefault.jpg' }
 ];
-
 
 let results = [...DEMO_TRACKS];
 let currentIdx = -1;
@@ -38,13 +28,14 @@ let elapsedSecs = 0;
 let totalSecs = 0;
 let currentVideoId = null;
 let currentView = 'home';
+
 let playlist = loadStore('hibiki_playlist', []);
 let recent = loadStore('hibiki_recent', []);
 
 function loadStore(key, fallback) {
   try {
     return JSON.parse(localStorage.getItem(key)) || fallback;
-  } catch (e) {
+  } catch {
     return fallback;
   }
 }
@@ -88,15 +79,18 @@ function renderResults(tracks) {
   }
 
   empty.style.display = 'none';
+
   container.innerHTML = tracks.map((track, index) => {
     const isActive = track.id === currentVideoId;
     const saved = isSaved(track);
-    const playedDate = track.playedAt ? `<div class="played-date">${escHtml(track.playedAt)}</div>` : '';
+    const playedDate = track.playedAt
+      ? `<div class="played-date">${escHtml(track.playedAt)}</div>`
+      : '';
 
     return `
       <div class="result-item ${isActive ? 'active' : ''} ${isActive && isPlaying ? 'playing' : ''}">
         <div class="result-num">${index + 1}</div>
-        <img class="result-thumb" src="${escHtml(track.thumb)}" alt="" loading="lazy" onerror="this.src=''" />
+        <img class="result-thumb" src="${escHtml(track.thumb)}" alt="" loading="lazy" />
         <div class="result-info" onclick="selectTrack(${index})">
           <div class="result-title">${escHtml(track.title)}</div>
           <div class="result-channel">${escHtml(track.channel)}</div>
@@ -119,6 +113,7 @@ async function doSearch() {
 
   currentView = 'home';
   setActiveNav('home');
+
   document.getElementById('sectionTitle').textContent = `Results for "${query}"`;
   document.getElementById('results').innerHTML = '';
   document.getElementById('emptyState').style.display = 'none';
@@ -137,7 +132,8 @@ async function doSearch() {
   }
 
   try {
-    const url = 'https://www.googleapis.com/youtube/v3/search' +
+    const url =
+      'https://www.googleapis.com/youtube/v3/search' +
       `?part=snippet&q=${encodeURIComponent(query)}&type=video` +
       `&videoCategoryId=10&maxResults=20&key=${apiKey}`;
 
@@ -178,6 +174,7 @@ function selectTrack(index) {
   const npThumb = document.getElementById('npThumb');
   npThumb.src = track.thumb;
   npThumb.style.display = 'block';
+
   document.getElementById('npThumbPlaceholder').style.display = 'none';
   document.getElementById('openYtBtn').style.display = 'flex';
 
@@ -210,20 +207,36 @@ function loadYouTube(videoId) {
 
   totalSecs = 200 + Math.floor(Math.random() * 120);
   document.getElementById('duration').textContent = fmt(totalSecs);
+
   updatePlayIcon();
   startProgress();
 }
 
+function sendYoutubeCommand(command) {
+  const iframe = document.getElementById('ytPlayer');
+  if (!iframe) return;
+
+  iframe.contentWindow?.postMessage(JSON.stringify({
+    event: 'command',
+    func: command,
+    args: []
+  }), '*');
+}
+
 function startProgress() {
   clearInterval(progressTimer);
+
   progressTimer = setInterval(() => {
     if (!isPlaying) return;
+
     elapsedSecs++;
 
     if (elapsedSecs >= totalSecs) {
       clearInterval(progressTimer);
+
       if (isRepeat) {
         elapsedSecs = 0;
+        sendYoutubeCommand('seekTo');
         startProgress();
       } else {
         skipNext();
@@ -237,6 +250,7 @@ function startProgress() {
 
 function updateProgress() {
   const percent = totalSecs > 0 ? (elapsedSecs / totalSecs * 100).toFixed(2) : 0;
+
   document.getElementById('progressFill').style.width = percent + '%';
   document.getElementById('elapsed').textContent = fmt(elapsedSecs);
   document.getElementById('duration').textContent = fmt(totalSecs);
@@ -244,35 +258,44 @@ function updateProgress() {
 
 function togglePlay() {
   if (currentIdx === -1) return;
+
   isPlaying = !isPlaying;
+
+  if (isPlaying) {
+    sendYoutubeCommand('playVideo');
+  } else {
+    sendYoutubeCommand('pauseVideo');
+  }
+
   updatePlayIcon();
   renderResults(results);
 }
 
 function updatePlayIcon() {
   const icon = document.getElementById('playIcon');
+
   if (isPlaying) {
-    icon.innerHTML = '<rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect>';
+    icon.innerHTML =
+      '<rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect>';
   } else {
-    icon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"></polygon>';
+    icon.innerHTML =
+      '<polygon points="5 3 19 12 5 21 5 3"></polygon>';
   }
 }
 
 function skipNext() {
   if (!results.length) return;
 
-  let nextIndex;
-  if (isShuffle) {
-    nextIndex = Math.floor(Math.random() * results.length);
-  } else {
-    nextIndex = (currentIdx + 1) % results.length;
-  }
+  const nextIndex = isShuffle
+    ? Math.floor(Math.random() * results.length)
+    : (currentIdx + 1) % results.length;
 
   selectTrack(nextIndex);
 }
 
 function skipPrev() {
   if (!results.length) return;
+
   const previousIndex = (currentIdx - 1 + results.length) % results.length;
   selectTrack(previousIndex);
 }
@@ -281,6 +304,7 @@ function seekTo(event) {
   const bar = document.getElementById('progressBar');
   const rect = bar.getBoundingClientRect();
   const percent = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+
   elapsedSecs = Math.floor(percent * totalSecs);
   updateProgress();
 }
@@ -301,20 +325,25 @@ function setVolume(value) {
 
 function toggleMute() {
   isMuted = !isMuted;
+
   const slider = document.getElementById('volumeSlider');
   slider.value = isMuted ? 0 : 80;
+
   setVolume(slider.value);
   updateVolIcon();
 }
 
 function updateVolIcon() {
   const icon = document.getElementById('volIcon');
+
   if (isMuted) {
-    icon.innerHTML = `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+    icon.innerHTML = `
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
       <line x1="23" y1="9" x2="17" y2="15" stroke="currentColor" stroke-width="1.8"></line>
       <line x1="17" y1="9" x2="23" y2="15" stroke="currentColor" stroke-width="1.8"></line>`;
   } else {
-    icon.innerHTML = `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+    icon.innerHTML = `
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
       <path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"></path>`;
   }
 }
@@ -331,6 +360,7 @@ function toggleRepeat() {
 
 function toggleLike() {
   if (currentIdx === -1 || !currentVideoId) return;
+
   const track = results[currentIdx];
   togglePlaylistTrack(track);
 }
@@ -344,7 +374,12 @@ function togglePlaylistTrack(track) {
   if (isSaved(track)) {
     playlist = playlist.filter(item => item.id !== track.id);
   } else {
-    playlist.unshift({ id: track.id, title: track.title, channel: track.channel, thumb: track.thumb });
+    playlist.unshift({
+      id: track.id,
+      title: track.title,
+      channel: track.channel,
+      thumb: track.thumb
+    });
   }
 
   saveStore('hibiki_playlist', playlist);
@@ -363,6 +398,7 @@ function updateLikeButton(track) {
 
 function addRecentlyPlayed(track) {
   recent = recent.filter(item => item.id !== track.id);
+
   recent.unshift({
     id: track.id,
     title: track.title,
@@ -370,12 +406,14 @@ function addRecentlyPlayed(track) {
     thumb: track.thumb,
     playedAt: new Date().toLocaleString()
   });
+
   recent = recent.slice(0, 15);
   saveStore('hibiki_recent', recent);
 }
 
 function showView(view, button) {
   currentView = view;
+
   if (button) setActiveButton(button);
   else setActiveNav(view);
 
@@ -404,25 +442,42 @@ function focusSearch(button) {
 }
 
 function setActiveButton(button) {
-  document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.classList.remove('active');
+  });
+
   button.classList.add('active');
 }
 
 function setActiveNav(view) {
-  const map = { home: 0, search: 1, playlist: 2, recent: 3 };
+  const map = {
+    home: 0,
+    search: 1,
+    playlist: 2,
+    recent: 3
+  };
+
   const items = document.querySelectorAll('.nav-item');
+
   items.forEach(item => item.classList.remove('active'));
-  if (items[map[view]]) items[map[view]].classList.add('active');
+
+  if (items[map[view]]) {
+    items[map[view]].classList.add('active');
+  }
 }
 
 function toggleTheme() {
-  const nextTheme = document.body.classList.contains('light-mode') ? 'dark' : 'light';
+  const nextTheme = document.body.classList.contains('light-mode')
+    ? 'dark'
+    : 'light';
+
   applyTheme(nextTheme);
   localStorage.setItem('hibiki_theme', nextTheme);
 }
 
 function applyTheme(theme) {
   const light = theme === 'light';
+
   document.body.classList.toggle('light-mode', light);
 
   const themeBtn = document.getElementById('themeBtn');
@@ -434,11 +489,13 @@ function applyTheme(theme) {
 
 function openInYoutube() {
   if (!currentVideoId) return;
+
   window.open(`https://www.youtube.com/watch?v=${currentVideoId}`, '_blank');
 }
 
 document.addEventListener('keydown', event => {
   const tag = document.activeElement.tagName;
+
   if (tag === 'INPUT' || tag === 'TEXTAREA') return;
 
   if (event.code === 'Space') {
@@ -457,13 +514,19 @@ document.getElementById('searchInput').addEventListener('keydown', event => {
 
 document.getElementById('apiKey').addEventListener('input', function () {
   const value = this.value.trim();
-  if (value) localStorage.setItem('hibiki_api_key', value);
-  else localStorage.removeItem('hibiki_api_key');
+
+  if (value) {
+    localStorage.setItem('hibiki_api_key', value);
+  } else {
+    localStorage.removeItem('hibiki_api_key');
+  }
 });
 
 const savedKey = localStorage.getItem('hibiki_api_key');
+
 if (savedKey) {
   const keyInput = document.getElementById('apiKey');
+
   keyInput.value = savedKey;
   keyInput.placeholder = 'API key loaded!';
   keyInput.style.color = '#5dcaa5';
