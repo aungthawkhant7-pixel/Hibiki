@@ -598,3 +598,30 @@ button {
     text-overflow: ellipsis;
   }
 }
+
+/* Fix SVG icon size */
+
+.nav-item svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  fill: currentColor;
+}
+
+.search-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.ctrl-btn svg,
+.play-btn svg,
+.like-btn svg,
+.open-yt-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.play-btn svg {
+  width: 20px;
+  height: 20px;
+}
