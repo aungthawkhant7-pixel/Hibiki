@@ -4,39 +4,41 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Hibiki 響 — Music Player</title>
+
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <!-- Main CSS file -->
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="app">
+    <!-- Sidebar navigation -->
     <aside class="sidebar">
-      <div class="logo">
+      <div class="logo" aria-label="Hibiki music player logo">
         <span class="logo-hi">Hi</span><span class="logo-biki">biki</span>
         <span class="logo-kanji">響</span>
       </div>
 
-      <nav class="nav">
-        <button class="nav-item active" onclick="showView('home', this)">
-          <svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg>
+      <nav class="nav" aria-label="Main navigation">
+        <button class="nav-item active" data-view="home" type="button">
+          <span class="nav-icon">⌂</span>
           <span>Home</span>
         </button>
-        <button class="nav-item" onclick="focusSearch(this)">
-          <svg viewBox="0 0 24 24"><path d="M10.5 18a7.5 7.5 0 1 1 5.3-12.8 7.5 7.5 0 0 1 0 10.6L22 22l-2 2-6.2-6.2A7.4 7.4 0 0 1 10.5 18zm0-3a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9z"/></svg>
+        <button class="nav-item" data-action="search" type="button">
+          <span class="nav-icon">⌕</span>
           <span>Search</span>
         </button>
-        <button class="nav-item" onclick="showView('playlist', this)">
-          <svg viewBox="0 0 24 24"><path d="M4 5h12v2H4V5zm0 5h12v2H4v-2zm0 5h8v2H4v-2zm14-5v7.2a2.8 2.8 0 1 1-2-2.7V8h5v2h-3z"/></svg>
+        <button class="nav-item" data-view="playlist" type="button">
+          <span class="nav-icon">♡</span>
           <span>Playlist</span>
         </button>
-        <button class="nav-item" onclick="showView('recent', this)">
-          <svg viewBox="0 0 24 24"><path d="M13 3a9 9 0 1 1-8.5 6H2l3.5-4L9 9H6.6A7 7 0 1 0 13 5V3zm-1 5h2v5l4 2-.9 1.8L12 14V8z"/></svg>
+        <button class="nav-item" data-view="recent" type="button">
+          <span class="nav-icon">↺</span>
           <span>Recently Played</span>
         </button>
-        <!-- <button class="nav-item" onclick="toggleTheme()" id="themeNavBtn">
-          <svg viewBox="0 0 24 24"><path d="M21 14.8A8.5 8.5 0 0 1 9.2 3 9 9 0 1 0 21 14.8z"/></svg>
-          <span id="themeNavText">Dark Mode</span>
-        </button> -->
       </nav>
 
       <div class="sidebar-footer">
@@ -44,29 +46,34 @@
       </div>
     </aside>
 
+    <!-- Main content -->
     <main class="main">
       <header class="topbar">
         <div class="search-wrap">
-          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input id="searchInput" type="text" placeholder="Search songs, artists, albums..." autocomplete="off" />
-          <button id="searchBtn" onclick="doSearch()">Search</button>
+          <span class="search-icon">⌕</span>
+          <input id="searchInput" type="text" placeholder="Search songs or artists..." autocomplete="off" />
+          <button id="searchBtn" type="button">Search</button>
         </div>
+
         <div class="top-actions">
           <div class="api-key-wrap">
-            <input id="apiKey" type="text" placeholder="Paste YouTube API key here to enable real search" />
+            <input id="apiKey" type="password" placeholder="Optional: paste YouTube API key for real search" autocomplete="off" />
+            <button id="forgetApiKeyBtn" type="button" title="Remove saved API key">Forget key</button>
           </div>
-          <button id="themeBtn" class="theme-btn" onclick="toggleTheme()">🌙 Dark</button>
+          <button id="themeBtn" class="theme-btn" type="button">🌙 Dark</button>
         </div>
       </header>
 
-      <section class="content">
-        <div id="sectionTitle" class="section-title">Featured tracks</div>
+      <section class="content" aria-live="polite">
+        <h1 id="sectionTitle" class="section-title">Featured tracks</h1>
         <div id="results" class="results-grid"></div>
-        <div id="loadingState" class="loading-state" style="display:none;">
+
+        <div id="loadingState" class="loading-state" hidden>
           <div class="spinner"></div>
           <span>Searching...</span>
         </div>
-        <div id="emptyState" class="empty-state" style="display:none;">
+
+        <div id="emptyState" class="empty-state" hidden>
           <div class="empty-icon">🎵</div>
           <div>No songs here</div>
           <small>Search or save songs to your playlist</small>
@@ -74,42 +81,32 @@
       </section>
     </main>
 
+    <!-- Bottom music player -->
     <footer class="player-bar" id="playerBar">
       <div class="np-left">
         <div class="np-thumb-wrap">
-          <img id="npThumb" src="" alt="" />
+          <img id="npThumb" src="" alt="Current song thumbnail" />
           <div class="np-thumb-placeholder" id="npThumbPlaceholder">♪</div>
         </div>
         <div class="np-info">
           <div class="np-title" id="npTitle">Nothing playing</div>
           <div class="np-channel" id="npChannel">Select a track to start</div>
         </div>
-        <button class="like-btn" id="likeBtn" onclick="toggleLike()" title="Save to playlist">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-        </button>
+        <button class="like-btn" id="likeBtn" type="button" title="Save to playlist">♡</button>
       </div>
 
       <div class="np-center">
         <div class="controls">
-          <button class="ctrl-btn" onclick="toggleShuffle()" id="shuffleBtn" title="Shuffle">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
-          </button>
-          <button class="ctrl-btn" onclick="skipPrev()" title="Previous">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
-          </button>
-          <button class="play-btn" id="playBtn" onclick="togglePlay()" title="Play/Pause">
-            <svg id="playIcon" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-          </button>
-          <button class="ctrl-btn" onclick="skipNext()" title="Next">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
-          </button>
-          <button class="ctrl-btn" onclick="toggleRepeat()" id="repeatBtn" title="Repeat">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
-          </button>
+          <button class="ctrl-btn" id="shuffleBtn" type="button" title="Shuffle">⇄</button>
+          <button class="ctrl-btn" id="prevBtn" type="button" title="Previous">⏮</button>
+          <button class="play-btn" id="playBtn" type="button" title="Play/Pause">▶</button>
+          <button class="ctrl-btn" id="nextBtn" type="button" title="Next">⏭</button>
+          <button class="ctrl-btn" id="repeatBtn" type="button" title="Repeat">↻</button>
         </div>
+
         <div class="progress-wrap">
           <span class="time" id="elapsed">0:00</span>
-          <div class="progress-bar" id="progressBar" onclick="seekTo(event)">
+          <div class="progress-bar" id="progressBar" role="slider" aria-label="Song progress">
             <div class="progress-fill" id="progressFill"></div>
           </div>
           <span class="time" id="duration">0:00</span>
@@ -117,20 +114,17 @@
       </div>
 
       <div class="np-right">
-        <button class="ctrl-btn" onclick="toggleMute()" id="muteBtn" title="Mute">
-          <svg id="volIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/></svg>
-        </button>
-        <input type="range" id="volumeSlider" class="volume-slider" min="0" max="100" value="80" oninput="setVolume(this.value)" />
-        <button class="open-yt-btn" id="openYtBtn" onclick="openInYoutube()" title="Open in YouTube" style="display:none;">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 15.5 16 12l-6-3.5v7z"/><path d="M21.6 7.2s-.2-1.5-.8-2.1c-.8-.8-1.6-.8-2-.9C16 4 12 4 12 4s-4 0-6.8.2c-.4 0-1.2.1-2 .9-.6.6-.8 2.1-.8 2.1S2 9 2 10.8v1.7c0 1.8.4 3.6.4 3.6s.2 1.5.8 2.1c.8.8 1.8.8 2.3.9 1.7.2 6.5.2 6.5.2s4 0 6.8-.2c.4 0 1.2-.1 2-.9.6-.6.8-2.1.8-2.1s.4-1.8.4-3.6v-1.7c0-1.8-.4-3.6-.4-3.6z"/></svg>
-          YouTube
-        </button>
+        <button class="ctrl-btn" id="muteBtn" type="button" title="Mute">🔊</button>
+        <input type="range" id="volumeSlider" class="volume-slider" min="0" max="100" value="80" />
+        <button class="open-yt-btn" id="openYtBtn" type="button" hidden>YouTube</button>
       </div>
 
-      <div id="ytContainer" style="display:none;"></div>
+      <!-- Hidden YouTube iframe. JavaScript controls play/pause using postMessage. -->
+      <div id="ytContainer" hidden></div>
     </footer>
   </div>
 
+  <!-- Main JavaScript file -->
   <script src="script.js"></script>
 </body>
 </html>
